@@ -1,15 +1,11 @@
 package ru.netology.javacore;
 
-import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Scanner;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 
 public class TodoServer {
     int port;
@@ -22,21 +18,21 @@ public class TodoServer {
 
     public void start() {
         System.out.println("Starting server at " + port + "...");
-        try (ServerSocket serverSocket = new ServerSocket(8989);) {
+        try (ServerSocket serverSocket = new ServerSocket(8989)) {
             while (true) {
                 try (
                         Socket socket = serverSocket.accept();
                         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                        PrintWriter out = new PrintWriter(socket.getOutputStream(), true)
                 ) {
                     String inTask = in.readLine();
-                    Gson gson = new GsonBuilder().create();
-                    gson.toJson(inTask);
-                    Todos task = gson.fromJson(inTask, Todos.class);
-                    if (task.getType().equals("ADD")) {
-                        todos.addTask(task.getTask());
-                    } else if (task.getType().equals("REMOVE")) {
-                        todos.removeTask(task.getTask());
+                    JsonObject jsonObject = JsonParser.parseString(inTask).getAsJsonObject();
+                    String type = jsonObject.get("type").getAsString();
+                    String task = jsonObject.get("task").getAsString();
+                    if (type.equals("ADD")) {
+                        todos.addTask(task);
+                    } else if (type.equals("REMOVE")) {
+                        todos.removeTask(task);
                     }
                     out.println(todos.getAllTasks());
                 }
@@ -47,3 +43,4 @@ public class TodoServer {
         }
     }
 }
+
